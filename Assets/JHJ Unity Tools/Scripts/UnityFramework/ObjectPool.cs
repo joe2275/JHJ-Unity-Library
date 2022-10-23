@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -5,20 +6,26 @@ namespace UnityFramework
 {
     public class ObjectPool<TKey, TObject> : MonoBehaviour where TObject : MonoBehaviour, IPool<TKey>
     {
+        [Serializable]
         public class SinglePool
         {
-            private readonly TObject[] mObjectArray;
+            [SerializeField] private TObject pooling;
+            [SerializeField] private int count;
+
+            private TObject[] mPoolingArray;
             private int mIndex;
 
-            public SinglePool(TObject prefab, int count, Transform parent)
+            public TKey Key => pooling.Key;
+
+            public void Initialize(Transform parent)
             {
-                mObjectArray = new TObject[count];
+                mPoolingArray = new TObject[count];
 
                 for (int i = 0; i < count; i++)
                 {
-                    TObject inst = Instantiate(prefab, parent);
-                    inst.gameObject.SetActive(false);
-                    mObjectArray[i] = inst;
+                    TObject poolingObject = Instantiate(pooling, parent);
+                    poolingObject.gameObject.SetActive(false);
+                    mPoolingArray[i] = poolingObject;
                 }
             }
 
@@ -26,16 +33,16 @@ namespace UnityFramework
             {
                 TObject obj = null;
 
-                for (int i = 0; i < mObjectArray.Length; i++)
+                for (int i = 0; i < mPoolingArray.Length; i++)
                 {
                     int curIndex = mIndex++;
-                    mIndex = mIndex < mObjectArray.Length ? mIndex : 0;
-                    if (!mObjectArray[curIndex].IsPooled)
+                    mIndex = mIndex < mPoolingArray.Length ? mIndex : 0;
+                    if (!mPoolingArray[curIndex].IsPooled)
                     {
                         continue;
                     }
 
-                    obj = mObjectArray[curIndex];
+                    obj = mPoolingArray[curIndex];
                     break;
                 }
 
@@ -45,11 +52,13 @@ namespace UnityFramework
 
         private static Dictionary<TKey, SinglePool> _poolMap;
 
+        [Header("Options")]
         [SerializeField] private bool dontDestroy;
         [SerializeField] private Transform holder;
-        [SerializeField] private TObject[] objectArray;
-        [SerializeField] private int[] countArray;
 
+        [Header("Pooling")] [ArrayElementTitle("Key")] 
+        [SerializeField] private SinglePool[] poolArray;
+        
         public static TObject Get(TKey key)
         {
             return _poolMap[key].Get();
@@ -64,7 +73,7 @@ namespace UnityFramework
         {
             if (dontDestroy)
             {
-                if (!(_poolMap is null))
+                if (_poolMap is not null)
                 {
                     Destroy(gameObject);
                     return;
@@ -78,9 +87,10 @@ namespace UnityFramework
             }
 
             _poolMap = new Dictionary<TKey, SinglePool>();
-            for (int i = 0; i < objectArray.Length; i++)
+            for (int i = 0; i < poolArray.Length; i++)
             {
-                _poolMap.Add(objectArray[i].Key, new SinglePool(objectArray[i], countArray[i], holder ? holder : transform));
+                poolArray[i].Initialize(holder ? holder : transform);
+                _poolMap.Add(poolArray[i].Key, poolArray[i]);
             }
         }
 

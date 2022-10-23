@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using UnityFramework;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -75,7 +75,7 @@ namespace UnityFramework
                 mPrevStateInstance = mCurStateInstance;
                 mCurStateInstance = mActorStateDict[mCurState];
 
-                if (!(mPrevState is null) && !mPrevState.Equals(mCurState))
+                if (!(mPrevStateInstance is null) && !mPrevState.Equals(mCurState))
                 {
                     mPrevStateInstance.End();
                 }
@@ -108,7 +108,9 @@ namespace UnityFramework
 
         protected virtual void Start()
         {
-            CurState = initialState;
+            mCurState = initialState;
+            mCurStateInstance = mActorStateDict[mCurState];
+            mCurStateInstance.OnStart.Invoke();
         }
 
         protected virtual void Update()

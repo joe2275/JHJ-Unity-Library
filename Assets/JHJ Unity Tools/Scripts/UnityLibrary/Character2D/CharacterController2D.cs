@@ -335,15 +335,8 @@ namespace Character2D
             
             newVelocity.y = 0f;
             Vector2 prevVelocity = newVelocity;
-            if (mIsGrounded)
-            {
-                newVelocity += mMovement.normalized * (acceleration * Time.fixedDeltaTime);
-            }
-            else
-            {
-                newVelocity += mMovement.normalized * (accelerationInAir * Time.fixedDeltaTime);
-            }
-            
+            newVelocity += mMovement.normalized * (accelerationInAir * Time.fixedDeltaTime);
+
             if (newVelocity.sqrMagnitude > maxSpeed * maxSpeed)
             {
                 newVelocity = Vector2.ClampMagnitude(newVelocity, prevVelocity.magnitude);
